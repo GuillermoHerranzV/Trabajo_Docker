@@ -1,0 +1,35 @@
+services:
+  backend:
+    image: my-backend
+    pull_policy: never
+    container_name: my-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./mongodb/.env
+    environment:
+      - PORT=8000
+  
+  frontend:
+    image: my-frontend
+    pull_policy: never
+    container_name: my-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+  
+  mongodb:
+    image: mongo:8.2.2
+    container_name: my-mongodb
+    volumes:
+      - mongodb-data:/data/db
+    env_file:
+      - ./mongodb/.env
+
+volumes:
+  mongodb-data:

@@ -1,0 +1,68 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+ <head>
+    <title>Store</title>
+    <link rel="stylesheet" href="./styles.css">
+ </head>
+
+ <body>
+    <h1>Store</h1>
+    <a href="carrito.html"><button class="button">Carrito</button></a>
+    <div id="items">
+      <!-- Items will be loaded here -->
+    </div>
+    <script>
+      const GRAPHQL_URL = 'http://localhost:8000/graphql';
+
+      async function fetchGraphQL(query, variables = {}) {
+        const response = await fetch(GRAPHQL_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query, variables }),
+        });
+        return response.json();
+      }
+
+      async function loadItems() {
+        const query = `
+          query GetRopas($tipo: String!) {
+            getRopas(tipo: $tipo) {
+              id
+              nombre
+              precio
+              tipo
+            }
+          }
+        `;
+        const result = await fetchGraphQL(query, { tipo: "ropa" }); // Asumir tipo "ropa" o cambiar
+        const itemsDiv = document.getElementById('items');
+        itemsDiv.innerHTML = '<h2>Items</h2>';
+        result.data.getRopas.forEach(item => {
+          const div = document.createElement('div');
+          div.innerHTML = `
+            ${item.nombre} - $${item.precio}
+            <button class="button" onclick="addToCart('${item.id}')">Add to Cart</button>
+          `;
+          itemsDiv.appendChild(div);
+        });
+      }
+
+      async function addToCart(ropaId) {
+        const mutation = `
+          mutation AddToCart($ropaId: ID!) {
+            addToCart(ropaId: $ropaId)
+          }
+        `;
+        await fetchGraphQL(mutation, { ropaId });
+        alert('Added to cart');
+      }
+
+      loadItems();
+    </script>
+ </body>
+</html>

@@ -1,0 +1,71 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+ <head>
+    <title>Carrito</title>
+    <link rel="stylesheet" href="./styles.css">
+ </head>
+
+ <body>
+    <h1>Carrito</h1>
+    <a href="index.html"><button class="button">Volver a la tienda</button></a>
+    <div id="cart">
+      <!-- Cart items will be loaded here -->
+    </div>
+    <script>
+      const GRAPHQL_URL = 'http://localhost:8000/graphql';
+
+      async function fetchGraphQL(query, variables = {}) {
+        const response = await fetch(GRAPHQL_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query, variables }),
+        });
+        return response.json();
+      }
+
+      async function loadCart() {
+        const query = `
+          query GetCart {
+            getCart {
+              id
+              nombre
+              precio
+            }
+          }
+        `;
+        const result = await fetchGraphQL(query);
+        const cartDiv = document.getElementById('cart');
+        cartDiv.innerHTML = '<h2>Items en el carrito</h2>';
+        if (result.data.getCart.length === 0) {
+          cartDiv.innerHTML += '<p>El carrito está vacío</p>';
+        } else {
+          result.data.getCart.forEach(item => {
+            const div = document.createElement('div');
+            div.innerHTML = `
+              ${item.nombre} - $${item.precio}
+              <button class="button" onclick="removeFromCart('${item.id}')">Remove</button>
+            `;
+            cartDiv.appendChild(div);
+          });
+        }
+      }
+
+      async function removeFromCart(ropaId) {
+        const mutation = `
+          mutation RemoveFromCart($ropaId: ID!) {
+            removeFromCart(ropaId: $ropaId)
+          }
+        `;
+        await fetchGraphQL(mutation, { ropaId });
+        loadCart(); // Reload cart
+      }
+
+      loadCart();
+    </script>
+ </body>
+</html>
